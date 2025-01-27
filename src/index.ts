@@ -104,7 +104,7 @@ app.post("/api/v1/contents" ,middleware ,  async(req , res) => {
 app.get("/api/v1/contents" , middleware , async(req , res) => {
     
     const userId = req.userId
-    const content = ContentModel.find({
+    const content = await ContentModel.find({
         userId : userId
     }).populate("userId" , "username")
 

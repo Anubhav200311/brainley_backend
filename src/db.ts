@@ -1,6 +1,5 @@
 import { connect } from "mongoose";
-
-const MONGO_URI = '';  // 'mongodb' is the container name
+import { MONGO_URI } from "./config";
 
 const connectToDatabase = async () => {
 
