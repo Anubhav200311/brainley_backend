@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
 import { middleware } from "./middleware";
+import mongoose from "mongoose";
 
 const app = express();
 
@@ -50,41 +51,39 @@ app.post("/api/v1/signup" , async (req , res) => {
 
 
 
-app.post("/api/v1/signin" , async(req , res) => {
-
-    const username : string = req.body.username
-    const password : string = req.body.password
+app.post("/api/v1/signin", async (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
 
     const user = await UserModel.findOne({
-        username: username,
+        username,
     })
-    
-    if(!user) {
-        res.status(403).json({
-            "message" : "No User found"
+
+    if(!user){
+        res.status(403).send({
+            "message" : "No User Found"
         })
     }
+    const passwordMatch = await bcrypt.compare(password , user!.password )
 
-    const passwordMatch = await bcrypt.compare(password , user!.password);
-
-    if( user && passwordMatch ) {
+    if (user && passwordMatch) {
         const token = jwt.sign({
-            id: user._id.toString()
-        } , JWT_SECRET);
+            id: user._id
+        }, JWT_SECRET)
 
         res.json({
             token
         })
-    }
-    else{
+    } else {
         res.status(403).json({
-            "message" : "Incorrect Creds"
+            message: "Incorrrect credentials"
         })
     }
-    
 })
 
-app.post("/api/v1/contents" ,middleware ,  async(req , res) => {
+
+
+app.post("/api/v1/content" ,middleware ,  async(req , res) => {
     const type = req.body.type;
     const link = req.body.link;
 
@@ -101,7 +100,7 @@ app.post("/api/v1/contents" ,middleware ,  async(req , res) => {
     })
 })
 
-app.get("/api/v1/contents" , middleware , async(req , res) => {
+app.get("/api/v1/content" , middleware , async(req , res) => {
     
     const userId = req.userId
     const content = await ContentModel.find({
@@ -114,5 +113,19 @@ app.get("/api/v1/contents" , middleware , async(req , res) => {
 })
 
 
+
+app.delete("/api/v1/content" , middleware , async(req , res) => {
+
+    const contentId = req.body.contentId
+
+    await ContentModel.findOneAndDelete({
+        _id: contentId,
+        userId: req.userId
+    })
+
+    res.json({
+        "message" : "deleted"
+    })
+})
 
 app.listen(3000)
